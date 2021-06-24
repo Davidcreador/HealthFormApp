@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext } from "react";
 import { Form } from 'react-final-form';
 import { Grid, Button, Paper, LinearProgress, CircularProgress, Box } from "@material-ui/core";
 
@@ -9,13 +9,15 @@ import MedicalForm from "../MedicalForm";
 import ConditionsForm from "../ConditionsForm";
 import Terms from "../Terms";
 import Summary from "../Summary";
+import { AppContext } from "../../App";
 
 // Function to simulate the latency from a real XHR call
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export default function HealthForm(props: HealthFormProps) {
   const classes = useStyles();
-  const [step, setStep] = useState(0);
+  // @ts-ignore
+  const [state, dispatch] = useContext(AppContext);
 
   const { initialValues } = props;
 
@@ -27,11 +29,17 @@ export default function HealthForm(props: HealthFormProps) {
   }
 
   const handleBackClick = () => {
-    setStep(step - 1);
+    dispatch({
+      type: "DECREMENT_STEP",
+      payload: state.step - 1
+    })
   }
 
   const handleNextClick = () => {
-    setStep(step + 1);
+    dispatch({
+      type: "INCREMENT_STEP",
+      payload: state.step + 1
+    })
   }
 
   function validate(values: FormData) {
@@ -48,7 +56,7 @@ export default function HealthForm(props: HealthFormProps) {
   return (
     <>
       <Box width="100%" mr={1} mb={4}>
-        <LinearProgress variant="determinate" value={step * 25} />
+        <LinearProgress variant="determinate" value={state.step * 25} />
       </Box>
       <Paper>
         <Form
@@ -60,20 +68,20 @@ export default function HealthForm(props: HealthFormProps) {
               <Grid container direction="column" alignContent="stretch" className={classes.formContainer}>
 
                 {/* This can of course be more elaborate, due to time restrictions, I chose this implementation. */}
-                {step === 0 && <GeneralInfoForm />}
-                {step === 1 && <ConditionsForm />}
-                {step === 2 && <MedicalForm />}
-                {step === 3 && <Terms />}
-                {step === 4 && <Summary values={values} />}
+                {state.step === 0 && <GeneralInfoForm />}
+                {state.step === 1 && <ConditionsForm />}
+                {state.step === 2 && <MedicalForm />}
+                {state.step === 3 && <Terms />}
+                {state.step === 4 && <Summary values={values} />}
 
                 <div className={classes.formButtons}>
-                  <Button variant="contained" color="secondary" disabled={step === 0} onClick={handleBackClick}>
+                  <Button variant="contained" color="secondary" disabled={state.step === 0} onClick={handleBackClick}>
                     Back
                   </Button>
-                  {step !== 4 && <Button variant="contained" color="primary" onClick={handleNextClick}>
+                  {state.step !== 4 && <Button variant="contained" color="primary" onClick={handleNextClick}>
                     Next
                   </Button>}
-                  {step === 4 && <Button type="submit" variant="contained" color="primary" disabled={submitting}>
+                  {state.step === 4 && <Button type="submit" variant="contained" color="primary" disabled={submitting}>
                     Submit
                   </Button>}
                 </div>
